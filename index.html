@@ -102,6 +102,16 @@
                         <button @click="resetForm" class="btn btn-warning">
                             Reset
                         </button>
+
+                        <div v-if="sendFailed" class="alert alert-danger" role="alert">
+                            Uh oh. Something went wrong and your emails didn't send.
+                        </div>
+
+                        <div v-if="sendComplete" class="alert alert-success" role="alert">
+                            Good news! Emails sent successfully.
+                        </div>
+
+
                         <br/>
                         <span><b>Note: Zero data or logs are retained by this service.</b></span><br/>
                         <span>But don't trust us, <a href="https://github.com/pdteam/gcnotifier-api"> download the
@@ -147,6 +157,8 @@
         createApp({
             data() {
                 return {
+                    sendFailed:false,
+                    sendComplete:false,
                     totalFileSize: 0,
                     totalEntities: 0,
                     template: "",
@@ -169,8 +181,7 @@
             methods: {
 
                 callApi() {
-                    console.log(this.template)
-                    console.log(this.secret)
+                    this.sendFailed = false;
                     if (this.template && this.template.length && this.secret && this.secret.length) {
                         this.setHeader();
                         this.body.template_id = this.template;
@@ -184,8 +195,13 @@
                                 emailHeader: this.headers,
                                 distributionList: this.distributionList,
                             },
-                        }).then((results) => { console.log(results) });
-                        console.log(results)
+                        }).then((results) => { 
+                            this.sendComplete = true; //Show the send worked
+                            // setTimeout(()=>{this.sendComplete = false}, 5000); //Hide noticed after 5 seconds
+                        }).catch((error) => { 
+                            this.sendComplete = false; //
+                            this.sendFailed = true; //
+                        });
                     }
                 },
 
@@ -213,7 +229,6 @@
                         let file = this.$refs.file.files[a];
 
                         var fileString = await this.convertToBase64(file);
-                        console.log('file', fileString)
                         this.totalFileSize = this.totalFileSize + file.size;
 
                         this.body.personalisation['application_file' + a] =
@@ -247,7 +262,6 @@
                     let csv = await this.readCsv(file);
                     this.distributionList = this.convertCsvToJsonArray(csv);
                     this.totalEntities = this.distributionList.length;
-                    console.log(this.distributionList);
                 },
 
                 readCsv(file) {
