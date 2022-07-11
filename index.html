@@ -1,25 +1,138 @@
 <html>
 
+<!-- Important Note -->
+<!--https://stackoverflow.com/questions/62701324/rest-api-call-succeeds-from-curl-or-python-but-fails-in-browser-->
+
 <head>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script> -->
+    <!-- Startup Boostrap -->
+    <link href="./styles.css" rel="stylesheet" type="text/css" />
 
+    <!-- Google fonts-->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet"
+        type="text/css" />
+
+    <title>
+        GCNotifier - Leveraging the GC Notify platform.
+    </title>
 </head>
 
 <body>
 
     <div id="app">
-        <span>{{ message }}</span>
 
-        <button @click="callApi" class="btn btn-primary">
-            Make an API Call to GC Notify
-        </button>
+        <!-- Navigation-->
+        <nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+            <div class="container">
+                <a class="navbar-brand" href="#page-top">GC Notifier</a>
+            </div>
+        </nav>
+        <!-- Masthead-->
 
+        <header class="masthead  text-center mb-0">
+            <div class="container d-flex align-items-center flex-column mb-0">
+                <!-- Masthead Avatar Image-->
+                <img class="masthead-avatar mb-5" src="./undraw_email_campaign_re_m6k5.svg" alt="..." />
+                <!-- Masthead Heading-->
+                <h1 class="masthead-heading text-uppercase mb-0">GC Notifier</h1>
+                <!-- Icon Divider-->
+                <div class="divider-custom divider-light">
+                    <div class="divider-custom-line"></div>
+                    <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+                    <div class="divider-custom-line"></div>
+                </div>
+                <!-- Masthead Subheading-->
+                <p class="masthead-subheading font-weight-light mb-0">A Simple Vue/Bootstrap UI and service to interface
+                    with <a href="https://notification.canada.ca/">GC Notify.</a></p>
+                <p class="masthead-subheading font-weight-light mb-0" style="font-weight:800;font-size:1.2em;">Not
+                    affiliated with GC Notify or the Government of Canada</p>
+            </div>
+        </header>
+
+        <div class="container">
+
+            <div class="container d-flex align-items-center flex-column">
+                Let's get started
+            </div>
+
+            <div class="row">
+                <div class="col">
+
+                    <div class="form-group mb-3">
+                        <label for="templateId">Template ID (* this is never stored!) </label>
+                        <input type="text" class="form-control" id="templateId" aria-describedby="templateHelp"
+                            placeholder="Enter GCNotify Template ID" v-model="template">
+                        <small id="templateHelp" class="form-text text-muted">Enter your Template ID from
+                            GCNotify</small>
+                    </div>
+
+                    <div class="form-group  mb-3">
+                        <label for="secret">Secret (* this is never stored!)</label>
+                        <input type="text" class="form-control" id="secret" aria-describedby="secretHelp"
+                            placeholder="Enter GCNotify Secret ID" v-model="secret">
+                        <small id="secretHelp" class="form-text text-muted">Enter your Secret ID from GCNotify</small>
+                    </div>
+
+
+                    <div class="form-group  mb-3">
+                        <label for="files">Files to attach - if any</label>
+                        <input type="file" class="form-control" @change="binaryFilesUpdated" ref="file"
+                            multiple="multiple">
+                        File Size: {{totalFileSize}}mb
+                        <div v-if="totalFileSize > 6" class="alert alert-danger" role="alert">
+                            Error: The attached files are more than 6MB total.
+                        </div>
+
+
+                    </div>
+
+                    <div class="form-group  mb-3">
+                        <label for="files">Distribution List (CSV)</label>
+                        <input type="file" class="form-control" @change="distributionListUpdated"
+                            ref="distributionListFile">
+                        Number of Entities: {{totalEntities}}
+                    </div>
+
+                    <div class="form-group  mb-3">
+                        <button :disabled="totalFileSize > 6" @click="callApi" class="btn btn-primary">
+                            Make an API Call to GC Notify
+                        </button>
+
+                        <button @click="resetForm" class="btn btn-warning">
+                            Reset
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <hr />
+
+            <div class="container d-flex align-items-center flex-column mb-4">
+
+
+                <img src="./GitHub_Logo.png" style="width:100px;" />
+                <h2> Download the Source</h2>
+                <h3> This code is Free and Open Source (MIT)</h3>
+                <a href="https://github.com/pdteam/gcnotifier-ui"> Download the JavaScript (Vue.js) Frontend</a>
+                <a href="https://github.com/pdteam/gcnotifier-api"> Download the JavaScript (Node.js) Backend API
+                    Server</a>
+                <span>See a bug? Pull Requests are always welcome!</span>
+
+
+            </div>
+
+
+        </div>
+
+        <!-- Copyright Section-->
+        <div class="copyright py-4 text-center text-white mb-5">
+            <div class="container"><small>GC Notifier</small></div>
+        </div>
 
     </div>
-
     <script src="https://unpkg.com/axios@0.25.0/dist/axios.min.js"></script>
     <script src="https://unpkg.com/vue@3"></script>
 
@@ -27,59 +140,168 @@
     <script>
         const { createApp, ref } = Vue;
 
-
         createApp({
             data() {
                 return {
-                    message: 'Hello Vue!',
-                    baseUrl: 'https://api.notification.canada.ca',
-                    postUrl: '/v2/notifications/email',
-                    header: {
-                        "Authorization": "ApiKey-v1 a4d6c3a2-5acf-43f8-80ac-0843b4996b39",
+                    totalFileSize: 0,
+                    totalEntities: 0,
+                    template: "",
+                    secret: "",
+                    distributionList: [],
+                    headers: {
+                        "Authorization": "ApiKey-v1 ",
                         "Content-Type": "application/json"
                     },
-                    requestBody:
+
+                    body:
                     {
-                        "email_address": "janak.alford@gmail.com",
-                        "template_id": "dd79cb38-29c2-448b-adc7-fefe21b9427a",
                         "personalisation": {
-                            "first_name": "Janak",
-                            "full_name": "Janak Alford",
                         }
                     },
-                    attachment: {
-                        "application_file": {
-                            "file": "file as base64 encoded string",
-                            "filename": "your_custom_filename.pdf",
-                            "sending_method": "attach"
-                        }
-
-                    }
 
                 }
             },
 
             methods: {
-                async callApi() {
-                    console.log("Test Starting")
-                    var results = await axios({
-                        method: "POST",
-                        url: this.baseUrl + this.postUrl,
-                        headers: this.header,
-                        body: this.requestBody
+
+                callApi() {
+                    console.log(this.template)
+                    console.log(this.secret)
+                    if (this.template && this.template.length && this.secret && this.secret.length) {
+                        this.setHeader();
+                        this.body.template_id = this.templateId;
+
+                        var results = axios({
+                            method: "POST",
+                            url: "http://localhost:5000/notifier", //Change this to your own API service 
+                            headers: { "Content-Type": "application/json" },
+                            data: {
+                                emailBody: this.body,
+                                emailHeader: this.headers,
+                                distributionList: this.distributionList,
+                            },
+                        }).then((results) => { console.log(results) });
+                        console.log(results)
+                    }
+                },
+
+                resetForm() {
+                    this.body = { personalisation: {} };
+                    this.totalFileSize = 0;
+                    this.totalEntities = 0;
+                    this.template = "";
+                    this.secret = "";
+                    this.headers = {
+                        "Authorization": "ApiKey-v1 ",
+                        "Content-Type": "application/json"
+                    };
+                },
+
+                //Manage Binary Files
+                async binaryFilesUpdated() {
+                    this.convertFilesToJson();
+                },
+
+                async convertFilesToJson() {
+                    this.totalFileSize = 0;
+                    // let formData = new FormData();
+
+                    for (var a = 0; a < this.$refs.file.files.length; a++) {
+                        let file = this.$refs.file.files[a];
+
+                        var fileString = await this.convertToBase64(file);
+                        console.log('file', fileString)
+                        this.totalFileSize = this.totalFileSize + file.size;
+
+                        this.body.personalisation['application_file' + a] =
+                        {
+                            "file": fileString, //to base 64
+                            "filename": file.name,
+                            "sending_method": "attach"
+                        }
+                    }
+                    this.totalFileSize = (this.totalFileSize / 1000000).toFixed(2);
+
+                },
+
+                //Convert binaries to Base 64 as required by GC Notify
+                convertToBase64(file) {
+                    const toBase64 = new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = () => resolve(reader.result.split(',').pop());
+                        reader.onerror = error => reject(error);
                     });
-                    console.log(results)
-                }
-            },
+
+                    return toBase64;
+
+                },
+
+                //Manage Distribution List file
+                async distributionListUpdated() {
+                    let file = this.$refs.distributionListFile.files[0];
+
+                    let csv = await this.readCsv(file);
+                    this.distributionList = this.convertCsvToJsonArray(csv);
+                    this.totalEntities = this.distributionList.length;
+                    console.log(this.distributionList);
+                },
+
+                readCsv(file) {
+                    const csvText = new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.readAsText(file);
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = error => reject(error);
+                    });
+                    return csvText;
+                },
+
+
+                convertCsvToJsonArray(csv) {
+
+                    var lines = csv.split("\n");
+                    var result = [];
+
+                    // NOTE: If your columns contain commas in their values, you'll need
+                    // to deal with those before doing the next step 
+                    // (you might convert them to &&& or something, then covert them back later)
+                    var headers = lines[0].split(",");
+                    for (var i = 1; i < headers.length; i++) {
+                        headers[i] = headers[i].trim();
+                    }
+
+                    for (var i = 1; i < lines.length; i++) {
+
+                        var obj = {};
+                        var currentLine = lines[i].split(",");
+
+                        //Only create entities where there are a matching number of elements as headers
+                        if (currentLine && currentLine.length == headers.length) {
+                            for (var j = 0; j < headers.length; j++) {
+                                obj[headers[j]] = currentLine[j].trim();
+                            }
+                            result.push(obj);
+                        }
+                    }
+
+                    return result; //JavaScript object
+
+                },
+
+                setHeader() {
+                    if (this.secret && this.secret.length >= 36) {
+                        this.headers.authorization = "ApiKey-v1 " + this.secret.substr(this.secret.length - 36, 36);
+                    }
+                    else {
+                        this.headers.authorization = "ApiKey-v1 ";
+                    }
+                },
+
+            }
 
         }).mount('#app')
-
-
-
-
     </script>
-
 </body>
-
 
 </html>
