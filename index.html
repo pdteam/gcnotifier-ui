@@ -43,8 +43,8 @@
                     <div class="divider-custom-line"></div>
                 </div>
                 <!-- Masthead Subheading-->
-                <p class="masthead-subheading font-weight-light mb-0">A Simple Vue/Bootstrap UI and service to interface
-                    with <a href="https://notification.canada.ca/">GC Notify.</a></p>
+                <p class="masthead-subheading font-weight-light mb-0">A free service and project to interface
+                    with <a href="https://notification.canada.ca/">GC Notify API.</a></p>
                 <p class="masthead-subheading font-weight-light mb-0" style="font-weight:800;font-size:1.2em;">Not
                     affiliated with GC Notify or the Government of Canada</p>
             </div>
@@ -74,34 +74,38 @@
                         <small id="secretHelp" class="form-text text-muted">Enter your Secret ID from GCNotify</small>
                     </div>
 
-
-                    <div class="form-group  mb-3">
-                        <label for="files">Files to attach - if any</label>
-                        <input type="file" class="form-control" @change="binaryFilesUpdated" ref="file"
-                            multiple="multiple">
-                        File Size: {{totalFileSize}}mb
-                        <div v-if="totalFileSize > 6" class="alert alert-danger" role="alert">
-                            Error: The attached files are more than 6MB total.
-                        </div>
-
-
-                    </div>
-
                     <div class="form-group  mb-3">
                         <label for="files">Distribution List (CSV)</label>
                         <input type="file" class="form-control" @change="distributionListUpdated"
                             ref="distributionListFile">
-                        Number of Entities: {{totalEntities}}
+                        <span>The CSV must contain personlisation the fields your template requires and must contain an
+                            email_address field to work. </span><br />
+                        <span>Number of Entities: {{totalEntities}} (must be more than 0)</span>
                     </div>
 
                     <div class="form-group  mb-3">
-                        <button :disabled="totalFileSize > 6" @click="callApi" class="btn btn-primary">
+                        <label for="files">Files to attach (optional)</label>
+                        <input type="file" class="form-control" @change="binaryFilesUpdated" ref="file"
+                            multiple="multiple">
+                        Combined File Size: {{totalFileSize}}mb
+                        <div v-if="totalFileSize > 6" class="alert alert-danger" role="alert">
+                            Error: The attached files are more than 6MB total.
+                        </div>
+                    </div>
+
+                    <div class="form-group  mb-3">
+                        <button :disabled="totalFileSize > 6 || totalEntities < 1" @click="callApi"
+                            class="btn btn-primary">
                             Make an API Call to GC Notify
                         </button>
-
+                        &nbsp;
                         <button @click="resetForm" class="btn btn-warning">
                             Reset
                         </button>
+                        <br/>
+                        <span><b>Note: Zero data or logs are retained by this service.</b></span><br/>
+                        <span>But don't trust us, <a href="https://github.com/pdteam/gcnotifier-api"> download the
+                                code</a> and launch your own service.</span>
                     </div>
 
                 </div>
@@ -169,11 +173,11 @@
                     console.log(this.secret)
                     if (this.template && this.template.length && this.secret && this.secret.length) {
                         this.setHeader();
-                        this.body.template_id = this.templateId;
+                        this.body.template_id = this.template;
 
                         var results = axios({
                             method: "POST",
-                            url: "http://localhost:5000/notifier", //Change this to your own API service 
+                            url: "https://gcnotifier-api.azurewebsites.net/notifier", //Change this to your own API service 
                             headers: { "Content-Type": "application/json" },
                             data: {
                                 emailBody: this.body,
@@ -204,7 +208,6 @@
 
                 async convertFilesToJson() {
                     this.totalFileSize = 0;
-                    // let formData = new FormData();
 
                     for (var a = 0; a < this.$refs.file.files.length; a++) {
                         let file = this.$refs.file.files[a];
@@ -291,10 +294,10 @@
 
                 setHeader() {
                     if (this.secret && this.secret.length >= 36) {
-                        this.headers.authorization = "ApiKey-v1 " + this.secret.substr(this.secret.length - 36, 36);
+                        this.headers.Authorization = "ApiKey-v1 " + this.secret.substr(this.secret.length - 36, 36);
                     }
                     else {
-                        this.headers.authorization = "ApiKey-v1 ";
+                        this.headers.Authorization = "ApiKey-v1 ";
                     }
                 },
 
